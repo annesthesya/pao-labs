@@ -3,12 +3,12 @@ package com.company.assignments;
 import java.util.Date;
 
 public class Assignment {
-    protected static int idCounter = 0 ;
-    protected final int id;
-    protected int courseId;
-    protected double weight;
-    protected Date deadline;
-    protected String details;
+    private static int idCounter = 0 ;
+    private final int id;
+    private int courseId;
+    private double weight;
+    private Date deadline;
+    private String details;
 
     public Assignment(int courseId, double weight, Date deadline, String details) {
         idCounter++;
