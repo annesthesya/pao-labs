@@ -320,8 +320,11 @@ public class Service {
 
         switch(choice){
             case 1: {
+                System.out.println("NUMBER OF EXERCISES:");
+                int nr = scan.nextInt();
+                scan.nextLine();
                 Homework h = new Homework(courseId, weight, new SimpleDateFormat("dd-MM-yyyy").parse(deadline),
-                        details);
+                        details, nr);
                 assignmentMap.put(h.getId(), h);
                 courseMap.get(courseId).getAssignmentList().add(h.getId());
                 System.out.println("SUMMARY:" + h.toString());
