@@ -1,4 +1,4 @@
-package com.company.assignments;
+package src.com.company.assignments;
 
 import java.util.Date;
 

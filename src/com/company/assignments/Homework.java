@@ -1,4 +1,4 @@
-package com.company.assignments;
+package src.com.company.assignments;
 
 import java.util.Date;
 
@@ -7,6 +7,14 @@ public class Homework extends Assignment{
 
     public Homework(int courseId, double weight, Date deadline, String details, int numberOfExercises) {
         super(courseId, weight, deadline, details);
+        this.numberOfExercises = numberOfExercises;
+    }
+
+    public int getNumberOfExercises() {
+        return numberOfExercises;
+    }
+
+    public void setNumberOfExercises(int numberOfExercises) {
         this.numberOfExercises = numberOfExercises;
     }
 
