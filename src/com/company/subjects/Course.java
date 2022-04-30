@@ -1,4 +1,4 @@
-package com.company.subjects;
+package src.com.company.subjects;
 
 import java.util.ArrayList;
 
@@ -9,10 +9,15 @@ public class Course {
     private int professorId;
     private int weekDay;
     private String hour;
-    private ArrayList<Integer> assignmentList = new ArrayList<>();
     private String location;
+    private ArrayList<Integer> assignmentList = new ArrayList<>();
 
-    public Course(int subjectId, int professorId,int weekDay, String hour, String location) {
+    public Course() {
+        idCounter++;
+        this.id = idCounter;
+    }
+
+    public Course(int subjectId, int professorId, int weekDay, String hour, String location) {
         idCounter++;
         this.id = idCounter;
         this.subjectId = subjectId;

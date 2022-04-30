@@ -1,6 +1,7 @@
-package com.company.subjects;
+package src.com.company.subjects;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Class {
     private static int idCounter = 0;
@@ -8,10 +9,15 @@ public class Class {
     private String name;
     private int studentNumber;
     private int representativeId;
-    private ArrayList<Integer> studentIdList;
-    private ArrayList<Integer> courseIdList;
+    private List<Integer> studentIdList = new ArrayList<>();
+    private List<Integer> courseIdList = new ArrayList<>();
 
-    public Class(String name, int studentNumber, int representativeId, ArrayList<Integer> studentIdList,ArrayList<Integer> courseIdList) {
+    public Class() {
+        idCounter ++;
+        this.id = idCounter;
+    }
+
+    public Class(String name, int studentNumber, int representativeId, List<Integer> studentIdList, List<Integer> courseIdList) {
         idCounter ++;
         this.id = idCounter;
         this.name = name;
@@ -46,17 +52,17 @@ public class Class {
         this.representativeId = representativeId;
     }
 
-    public ArrayList<Integer> getStudentIdList() {
+    public List<Integer> getStudentIdList() {
         return studentIdList;
     }
-    public void setStudentIdList(ArrayList<Integer> studentIdList) {
+    public void setStudentIdList(List<Integer> studentIdList) {
         this.studentIdList = studentIdList;
     }
 
-    public ArrayList<Integer> getCourseIdList() {
+    public List<Integer> getCourseIdList() {
         return courseIdList;
     }
-    public void setCourseIdList(ArrayList<Integer> courseIdList) {
+    public void setCourseIdList(List<Integer> courseIdList) {
         this.courseIdList = courseIdList;
     }
 
