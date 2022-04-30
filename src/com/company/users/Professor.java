@@ -1,10 +1,11 @@
-package com.company.users;
+package src.com.company.users;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Professor extends Person{
-    private ArrayList<Integer> courses = new ArrayList<>();
+    private List<Integer> courses = new ArrayList<>();
 
     public Professor() {
         super();
@@ -12,15 +13,15 @@ public class Professor extends Person{
     public Professor(String name, String surname, int age, String email, String password, Date birthday) {
         super(name, surname, age, email, password, birthday);
     }
-    public Professor(int id, String name, String surname, int age, String email, String password, Date birthday, ArrayList<Integer> courses) {
+    public Professor(int id, String name, String surname, int age, String email, String password, Date birthday, List<Integer> courses) {
         super(name, surname, age, email, password, birthday);
         this.courses = courses;
     }
 
-    public ArrayList<Integer> getCourses() {
+    public List<Integer> getCourses() {
         return courses;
     }
-    public void setCourses(ArrayList<Integer> courses) {
+    public void setCourses(List<Integer> courses) {
         this.courses = courses;
     }
 

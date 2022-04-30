@@ -1,7 +1,8 @@
-package com.company.users;
+package src.com.company.users;
 
-import com.company.assignments.Work;
+import src.com.company.assignments.Work;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -41,13 +42,7 @@ public class Student extends Person{
 
     @Override
     public String toString() {
-        return "Student{" +
-                "classId=" + classId +
-                ", works=" + works +
-                ", name='" + name + '\'' +
-                ", surname='" + surname + '\'' +
-                ", age=" + age +
-                ", birthday=" + birthday +
-                '}';
+        return "NAME: " + name + " " + surname +
+                "\nAGE: " + age;
     }
 }

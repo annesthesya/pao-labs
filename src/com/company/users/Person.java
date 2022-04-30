@@ -1,8 +1,9 @@
-package com.company.users;
+package src.com.company.users;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Person {
+public class Person implements Serializable {
     protected static int idCounter = 0;
     protected final int id;
     protected String name = "[FIRST_NAME]";
