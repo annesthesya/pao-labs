@@ -10,7 +10,7 @@ public class Course {
     private int weekDay;
     private String hour;
     private String location;
-    private ArrayList<Integer> assignmentList = new ArrayList<>();
+    private List<Integer> assignmentList = new ArrayList<>();
 
     public Course() {
         idCounter++;
