@@ -640,20 +640,22 @@ public class Service {
         }
         System.out.println("\nPASSWORD:");
         String inputPassword = scan.nextLine();
-
-        if (professorMap.get(id).getPassword().equals(inputPassword)){
-            System.out.println("Login successful!");
-            professorMenu(id);
-        }
-        else {
-            if (attempts < 3) {
-                System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
-                professorLogin(++attempts);
+        try{
+            if (professorMap.get(id).getPassword().equals(inputPassword)) {
+                System.out.println("Login successful!");
+                professorMenu(id);
+            } else {
+                if (attempts < 3) {
+                    System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+                    professorLogin(++attempts);
+                } else {
+                    System.out.println("Too many wrong attempts. Returning to main menu.");
+                    mainMenu();
+                }
             }
-            else {
-                System.out.println("Too many wrong attempts. Returning to main menu.");
-                mainMenu();
-            }
+        }catch(NullPointerException exception){
+            System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+            professorLogin(++attempts);
         }
     }
 
@@ -802,18 +804,21 @@ public class Service {
         scan.nextLine();
         System.out.println("\nPASSWORD:");
         String password = scan.nextLine();
-        if (studentMap.get(id) != null && studentMap.get(id).getPassword().equals(password)){
-            System.out.println("Login successful!");
-            studentMenu(id);
-        }
-        else if(attempts < 3){
-            System.out.printf(studentMap.get(id).getPassword());
-            System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
-            studentLogin(++attempts);
-        }
-        else {
-            System.out.println("Too many wrong attempts. Returning to main menu.");
-            mainMenu();
+        try {
+            if (studentMap.get(id) != null && studentMap.get(id).getPassword().equals(password)) {
+                System.out.println("Login successful!");
+                studentMenu(id);
+            } else if (attempts < 3) {
+                System.out.printf(studentMap.get(id).getPassword());
+                System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+                studentLogin(++attempts);
+            } else {
+                System.out.println("Too many wrong attempts. Returning to main menu.");
+                mainMenu();
+            }
+        }catch(NullPointerException exception){
+        System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+        studentLogin(++attempts);
         }
     }
 
