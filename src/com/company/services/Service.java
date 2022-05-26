@@ -1,11 +1,12 @@
-package com.company.services;
+package src.com.company.services;
 
-import com.company.assignments.*;
-import com.company.subjects.Class;
-import com.company.subjects.Course;
-import com.company.subjects.Subject;
-import com.company.users.Professor;
-import com.company.users.Student;
+import src.com.company.assignments.*;
+import src.com.company.subjects.Class;
+import src.com.company.subjects.Course;
+import src.com.company.subjects.Subject;
+import src.com.company.users.Action;
+import src.com.company.users.Professor;
+import src.com.company.users.Student;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,14 +20,15 @@ public class Service {
     private final Map<Integer, Professor> professorMap = new HashMap<>();
     private final Map<Integer, Subject> subjectMap = new HashMap<>();
     private final Map<Integer, Assignment> assignmentMap = new HashMap<>();
-    private final Scanner scan = new Scanner(System.in); //ok
-    private static Service instance; //ok
+    private final Scanner scan = new Scanner(System.in);
+    private static Service instance;
+    private static AuditService as;
 
-    private Service() throws ParseException, InterruptedException {
+    private Service() throws ParseException, InterruptedException, IllegalAccessException {
         init();
     }
 
-    public static Service createInstance() throws ParseException, InterruptedException {
+    public static Service createInstance() throws ParseException, InterruptedException, IllegalAccessException {
         if (instance == null){
             instance = new Service();
         }
@@ -39,38 +41,55 @@ public class Service {
         System.out.flush();
     }
 
-    private void studentListGenerator(int id) throws InterruptedException {
+    private void studentListGenerator(int id, int uid) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(uid, ste[0].getMethodName());
         cls();
-        if(! classMap.containsKey(id) ){
-            System.out.println("That class ID does not exist.");
+        if (!classMap.containsKey(id)) {
+            System.out.println("There is no class with that ID.");
+            return;
         }
         System.out.println("CLASS " + classMap.get(id).getName());
 
-        ArrayList<Integer> students = classMap.get(id).getStudentIdList();
+//        List<Integer> students = classMap.get(id).getStudentIdList();
 
         System.out.println("\n\tSTUDENT LIST:");
-        for (Integer student : students) {
-            Student currentStudent = studentMap.get(student);
-            System.out.println("\n\nNAME: " + currentStudent.getName() + " " + currentStudent.getSurname());
-            System.out.println("\nAGE: " + currentStudent.getAge());
-        }
+        studentMap.values().stream()
+                .filter(student->student.getClassId()==id)
+                .forEach(System.out::println);
+
+//        System.out.println("\n\tSTUDENT LIST:");
+//        for (Integer student : students) {
+//            Student currentStudent = studentMap.get(student);
+//            System.out.println("\n\nNAME: " + currentStudent.getName() + " " + currentStudent.getSurname());
+//            System.out.println("\nAGE: " + currentStudent.getAge());
+//        }
     }
 
-    private void viewScheduleC() throws InterruptedException {
+    private void viewScheduleC(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         System.out.println("\n\tCLASS SCHEDULE GENERATOR" +
                 "\nID:");
-        int id = scan.nextInt();
-        scan.nextLine();
+        
+        int cid;
+        try {
+            cid = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
 
-        Class targetClass = classMap.get(id);
+        if (!classMap.containsKey(cid)) {
+            System.out.println("There is no class with that ID.");
+            return;
+            }
 
-        System.out.println("ok 1");
+        Class targetClass = classMap.get(cid);
 
-
-        ArrayList<ArrayList<String>> schedule = new ArrayList<>(7);
-
-        System.out.println("ok 2");
+        List<List<String>> schedule = new ArrayList<>(7);
 
         for (int i = 0; i < 7; i++)
             schedule.add(new ArrayList<>());
@@ -85,11 +104,10 @@ public class Service {
                         professorMap.get(currentCourse.getProfessorId()).getSurname();
                 String eventLog = hour + " - " + subjectName + " in " + location + " with " + professorName +"\n";
                 schedule.get(currentCourse.getWeekDay() - 1).add(eventLog);
-                System.out.println("ok 3");
             }
         }
 
-        System.out.println("\tSchedule of class " + classMap.get(id).getName()+"\n");
+        System.out.println("\tSchedule of class " + classMap.get(cid).getName()+"\n");
 
         for (int i = 0; i < 7; i++){
             if (! schedule.get(i).isEmpty()) {
@@ -125,23 +143,35 @@ public class Service {
 
         }
 
-        private void viewScheduleP() throws InterruptedException { //ok - tested
+        private void viewScheduleP(int id) throws InterruptedException, IllegalAccessException {
+            StackTraceElement[] ste = new Throwable().getStackTrace();
+            as.audit(id, ste[0].getMethodName());
             cls();
             System.out.println("\n\tPROFESSOR SCHEDULE GENERATOR" +
                     "\nID:");
-            int id = scan.nextInt();
-            scan.nextLine();
+            int pid;
+            try {
+                pid = scan.nextInt();
+                scan.nextLine();
+            } catch (InputMismatchException exception) {
+                System.out.println("Integers only, please.");
+                return;
+            }
+            if (!professorMap.containsKey(pid)) {
+                System.out.println("There is no professor with that ID.");
+                return;
+            }
+            String professorName = professorMap.get(pid).getName() + " " + professorMap.get(pid).getSurname();
+            System.out.println("\tSchedule of " + professorName);
 
-            String professorName = professorMap.get(id).getName() + " " + professorMap.get(id).getSurname();
-
-            ArrayList<ArrayList<String>> schedule = new ArrayList<>(7);
+            List<List<String>> schedule = new ArrayList<>(7);
 
             for (int i = 0; i < 7; i++)
                 schedule.add(new ArrayList<>());
 
             for (var entry : courseMap.entrySet()){
                 Course currentCourse = entry.getValue();
-                if (currentCourse.getProfessorId() == id) {
+                if (currentCourse.getProfessorId() == pid) {
                     String hour = currentCourse.getHour();
                     String location = currentCourse.getLocation();
                     String subjectName = subjectMap.get(currentCourse.getSubjectId()).getName();
@@ -150,8 +180,9 @@ public class Service {
                 }
             }
 
-            System.out.println("\tSchedule of " + professorName);
-
+            if(schedule.isEmpty()){
+                System.out.println("\nThe professor has no classes this semester!");
+            }
 
             for (int i = 0; i < 7; i++){
                 if (! schedule.get(i).isEmpty()) {
@@ -159,23 +190,17 @@ public class Service {
 
                     if(i == 0){
                         System.out.println("MONDAY");
-                    }
-                    else if (i==1){
+                    } else if (i==1){
                         System.out.println("TUESDAY");
-                    }
-                    else if (i==2){
+                    } else if (i==2){
                         System.out.println("WEDNESDAY");
-                    }
-                    else if (i==3){
+                    } else if (i==3){
                         System.out.println("THURSDAY");
-                    }
-                    else if (i==4){
+                    } else if (i==4){
                         System.out.println("FRIDAY");
-                    }
-                    else if (i==5){
+                    } else if (i==5){
                         System.out.println("SATURDAY");
-                    }
-                    else {
+                    } else {
                         System.out.println("SUNDAY");
                     }
 
@@ -186,33 +211,42 @@ public class Service {
             }
     }
 
-    private void viewSchedule() throws InterruptedException { //ok - tested
+    private void viewSchedule(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         System.out.println("\n\tSCHEDULE GENERATOR" +
                 "\n1.Class schedule;" +
                 "\n2.Professor schedule.");
-
-        int choice = scan.nextInt();
-        scan.nextLine();
-
+        
+        int choice = 0;
+        try {
+            choice = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         switch(choice){
             case 1: {
-                viewScheduleC();
+                viewScheduleC(id);
                 break;
             }
             case 2: {
-                viewScheduleP();
+                viewScheduleP(id);
                 break;
             }
         }
 
     }
 
-    private void viewWorks(int id) throws InterruptedException {//ok - NOT tested
+    private void viewWorks(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         if (! studentMap.containsKey(id)){
             System.out.println("Wrong ID!");
-            viewWorksP();
+            viewWorksP(id);
         }
         else {
             Student targetStudent = studentMap.get(id);
@@ -229,12 +263,17 @@ public class Service {
         }
     }
 
-    private void viewDeadlines(int id) {//ok - tested
+    private void viewDeadlines(int id) throws IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
+        if (!classMap.containsKey(id)) {
+            System.out.println("There is no class with that ID.");
+            return;
+        }
         Class targetClass = classMap.get(id);
         System.out.println("DEADLINES OF " + targetClass.getName());
         Date today = new Date(); //gets the current date
-        ArrayList<Assignment> deadlines =  new ArrayList<>();
-
+        List<Assignment> deadlines =  new ArrayList<>();
         for(var courseId : targetClass.getCourseIdList()){
             Course currentCourse = courseMap.get(courseId);
             for (var assignmentId : currentCourse.getAssignmentList()) {
@@ -243,6 +282,10 @@ public class Service {
                     deadlines.add(assignmentMap.get(assignmentId));
                 }
             }
+        }
+
+        if(deadlines.isEmpty()){
+            System.out.println("No upcoming deadlines!");
         }
 
         AssignmentComparator assignmentC = new AssignmentComparator();
@@ -254,7 +297,9 @@ public class Service {
 
 //    ------------------------------------------------------------PROFESSOR METHODS-------------------------------------
 
-    private void editProfessorData(int id) throws InterruptedException, ParseException { //ok - tested
+    private void editProfessorData(int id) throws InterruptedException, ParseException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         Professor currentProfessor = professorMap.get(id);
         cls();
         System.out.println("\tEDIT YOUR DATA");
@@ -273,7 +318,9 @@ public class Service {
         professorMenu(id);
     }
 
-    private void studentEnroll() throws ParseException, InterruptedException { // ok - tested
+    private void studentEnroll(int id) throws ParseException, InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         System.out.println("\n\tENROLLING NEW STUDENT");
         System.out.println("\nNAME:");
@@ -287,23 +334,44 @@ public class Service {
         System.out.println("\nBIRTHDAY(DD-MM-YYYY FORMAT):");
         String birthday = scan.nextLine();
         System.out.println("\nCLASS ID:");
-        int classId = scan.nextInt();
-        scan.nextLine();
+        int classId = 0;
+        try {
+            classId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         Student newStudent = new Student(name, surname,2022 - Integer.parseInt(birthday.substring(birthday.length() - 4)),
                 email, password, new SimpleDateFormat("dd-MM-yyyy").parse(birthday), classId);
         studentMap.put(newStudent.getId(),newStudent);
+        WriteService.write("src/com/company/data/Students.csv", newStudent, Student.class);
         System.out.println("SUMMARY:" + studentMap.get(newStudent.getId()).toString());
     }
 
-    private void addAssignment() throws ParseException { //ok - tested
+    private void addAssignment(int id) throws ParseException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         System.out.println("\n\n\tNEW ASSIGNMENT");
         System.out.println("\nCOURSE ID:");
-        int courseId = scan.nextInt();
-        scan.nextLine();
+        int courseId = 0;
+        try {
+            courseId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         System.out.println("\nWEIGHT(OUT OF 100):");
-        int weight = scan.nextInt();
+        int weight = 0;
+        try {
+            weight = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         weight = weight / 100;
-        scan.nextLine();
         System.out.println("\nDEADLINE(DD-MM-YYYY FORMAT):");
         String deadline = scan.nextLine();
         System.out.println("\nDETAILS:");
@@ -314,15 +382,25 @@ public class Service {
                 "\n\t1. Homework;" +
                 "\n\t2. Project;" +
                 "\n\t3. Exam.");
-
-        int choice = scan.nextInt();
-        scan.nextLine();
-
+        int choice = 0;
+        try {
+            choice = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         switch(choice){
             case 1: {
                 System.out.println("NUMBER OF EXERCISES:");
-                int nr = scan.nextInt();
-                scan.nextLine();
+                int nr = 0;
+                try {
+                    nr = scan.nextInt();
+                    scan.nextLine();
+                } catch (InputMismatchException exception) {
+                    System.out.println("Integers only, please.");
+                    return;
+                }
                 Homework h = new Homework(courseId, weight, new SimpleDateFormat("dd-MM-yyyy").parse(deadline),
                         details, nr);
                 assignmentMap.put(h.getId(), h);
@@ -332,8 +410,14 @@ public class Service {
             }
             case 2:{
                 System.out.println("NUMBER OF STUDENTS ALLOWED TO WORK ON THE SAME PROJECT:");
-                int nr = scan.nextInt();
-                scan.nextLine();
+                int nr = 0;
+                try {
+                    nr = scan.nextInt();
+                    scan.nextLine();
+                } catch (InputMismatchException exception) {
+                    System.out.println("Integers only, please.");
+                    return;
+                }
                 Project p = new Project(courseId, weight, new SimpleDateFormat("dd-MM-yyyy").parse(deadline),
                         details, nr);
                 assignmentMap.put(p.getId(), p);
@@ -344,11 +428,23 @@ public class Service {
             case 3:{
                 System.out.println("DURATION:");
                 boolean oral = true;
-                int duration = scan.nextInt();
-                scan.nextLine();
+                int duration = 0;
+                try {
+                    duration = scan.nextInt();
+                    scan.nextLine();
+                } catch (InputMismatchException exception) {
+                    System.out.println("Integers only, please.");
+                    return;
+                }
                 System.out.println("SUPERVISOR ID:");
-                int supervisor = scan.nextInt();
-                scan.nextLine();
+                int supervisor = 0;
+                try {
+                    supervisor = scan.nextInt();
+                    scan.nextLine();
+                } catch (InputMismatchException exception) {
+                    System.out.println("Integers only, please.");
+                    return;
+                }
                 System.out.println("IS THE EXAM ORAL? Y/N:");
                 String isOral = scan.nextLine();
                 if (isOral.toUpperCase().equals("N")){
@@ -365,40 +461,82 @@ public class Service {
         System.out.println("Assignment successfully added.");
     }
 
-    private void viewWorksP() throws InterruptedException { //ok - tested
+    private void viewWorksP(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         System.out.println("\n\tVIEW STUDENT WORKS");
         System.out.println("STUDENT ID:");
-        int id = scan.nextInt();
-        scan.nextLine();
-        viewWorks(id);
+        int sid;
+        try {
+            sid = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
+        viewWorks(sid);
     }
 
-    private void viewDeadlinesP() throws InterruptedException {//ok - tested
+    private void viewDeadlinesP(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
         System.out.println("\n\tVIEW CLASS DEADLINES");
         System.out.println("CLASS ID:");
-        int id = scan.nextInt();
-        scan.nextLine();
-        viewDeadlines(id);
+        int cid;
+        try {
+            cid = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
+        viewDeadlines(cid);
     }
 
-    private void studentListGeneratorP() throws InterruptedException {// ok - tested
+    private void studentListGeneratorP(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         System.out.println("\n\tCLASS LIST GENERATOR\nID:");
-        int id = scan.nextInt();
-        scan.nextLine();
-        studentListGenerator(id);
+        int cid;
+        try {
+            cid = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
+        studentListGenerator(cid, id);
     }
 
-    private void gradeWorks() {//ok - tested
+    private void gradeWorks(int id) throws IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         boolean exists = false;
         System.out.println("GRADING MENU");
         System.out.println("STUDENT ID:");
-        int studentId = scan.nextInt();
-        scan.nextLine();
+        int studentId = 0;
+        try {
+            studentId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
+        if (!studentMap.containsKey(studentId)) {
+            System.out.println("There is no student with that ID.");
+            return;
+        }
         System.out.println("WORK ID:");
-        int workId = scan.nextInt();
-        scan.nextLine();
+        int workId = 0;
+        try {
+            workId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         for (var work : studentMap.get(studentId).getWorks()){
             if (work.getId() == workId){
                 exists = true;
@@ -420,8 +558,10 @@ public class Service {
         }
     }
 
-    private void professorMenu(int id) throws ParseException, InterruptedException { //ok - tested
+    private void professorMenu(int id) throws ParseException, InterruptedException, IllegalAccessException {
         //used to call all the methods that professors have access to
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
 
         System.out.println("\t1. Edit your data;" +
@@ -433,41 +573,45 @@ public class Service {
                 "\n\t7. View all students in a class;" +
                 "\n\t8. Grade a student's work;" +
                 "\n\t0. EXIT.");
-
-        int choice = scan.nextInt();
-        scan.nextLine();
-
+        int choice = -1;
+        try {
+            choice = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         switch (choice){
             case 1: {
                 editProfessorData(id);
                 break;
             }
             case 2: {
-                studentEnroll();
+                studentEnroll(id);
                 break;
             }
             case 3: {
-                viewSchedule();
+                viewSchedule(id);
                 break;
             }
             case 4: {
-                addAssignment();
+                addAssignment(id);
                 break;
             }
             case 5: {
-                viewDeadlinesP();
+                viewDeadlinesP(id);
                 break;
             }
             case 6: {
-                viewWorksP();
+                viewWorksP(id);
                 break;
             }
             case 7: {
-                studentListGeneratorP();
+                studentListGeneratorP(id);
                 break;
             }
             case 8: {
-                gradeWorks();
+                gradeWorks(id);
                 break;
             }
             case 0: {
@@ -482,34 +626,44 @@ public class Service {
         professorMenu(id);
     }
 
-    private void professorLogin(int attempts) throws ParseException, InterruptedException { //ok - tested
+    private void professorLogin(int attempts) throws ParseException, InterruptedException, IllegalAccessException {
         cls();
         System.out.println("\n\tPROFESSOR LOGIN");
         System.out.println("\nID:");
-        int id = scan.nextInt();
-        scan.nextLine();
+        int id = 0;
+        try {
+            id = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         System.out.println("\nPASSWORD:");
         String inputPassword = scan.nextLine();
-
-        if (professorMap.get(id).getPassword().equals(inputPassword)){
-            System.out.println("Login successful!");
-            professorMenu(id);
-        }
-        else {
-            if (attempts < 3) {
-                System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
-                professorLogin(++attempts);
+        try{
+            if (professorMap.get(id).getPassword().equals(inputPassword)) {
+                System.out.println("Login successful!");
+                professorMenu(id);
+            } else {
+                if (attempts < 3) {
+                    System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+                    professorLogin(++attempts);
+                } else {
+                    System.out.println("Too many wrong attempts. Returning to main menu.");
+                    mainMenu();
+                }
             }
-            else {
-                System.out.println("Too many wrong attempts. Returning to main menu.");
-                mainMenu();
-            }
+        }catch(NullPointerException exception){
+            System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+            professorLogin(++attempts);
         }
     }
 
 //    ------------------------------------------------------------STUDENT METHODS---------------------------------------
 
-    private void editStudentData(int id) throws InterruptedException { //ok - tested
+    private void editStudentData(int id) throws InterruptedException, IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         Student currentStudent = studentMap.get(id);
         cls();
         System.out.println("\tEDIT YOUR DATA");
@@ -527,12 +681,25 @@ public class Service {
         System.out.println(studentMap.get(id).toString());
     }
 
-    private void submitWork(int id) { //ok - NOT tested
+    private void submitWork(int id) throws IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         boolean late = false;
         System.out.println("\n\tWORK SUBMISSION");
         System.out.println("\nASSIGNMENT ID:");
-        int assignmentId = scan.nextInt();
+        int assignmentId = 0;
+        try {
+            assignmentId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         scan.nextLine();
+        if (!assignmentMap.containsKey(assignmentId)){
+            System.out.println("There is no assignment with that ID.");
+            return;
+        }
         Date turnInTime = new Date();
         if (turnInTime.compareTo(assignmentMap.get(assignmentId).getDeadline()) > 0){
             late = true;
@@ -541,12 +708,20 @@ public class Service {
         studentMap.get(id).getWorks().add(w);
     }
 
-    private void viewGrade(int id) {//ok - NOT tested
+    private void viewGrade(int id) throws IllegalAccessException {
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         boolean exists = false;
         System.out.println("\n\tVIEW GRADE");
         System.out.println("\nWORK ID:");
-        int workId = scan.nextInt();
-        scan.nextLine();
+        int workId = 0;
+        try {
+            workId = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         for (var work : studentMap.get(id).getWorks()){
             if (work.getId() == workId){
                 exists = true;
@@ -563,10 +738,11 @@ public class Service {
         }
     }
 
-    private void studentMenu(int id) throws ParseException, InterruptedException {//ok - tested
+    private void studentMenu(int id) throws ParseException, InterruptedException, IllegalAccessException {
         //used to call all the methods that students have access to
+        StackTraceElement[] ste = new Throwable().getStackTrace();
+        as.audit(id, ste[0].getMethodName());
         cls();
-
         System.out.println("\n\tSTUDENT MENU\nChoose the operation you want to perform:"+
                 "\n\t1. Edit your data;" +
                 "\n\t2. View the schedule of a class or professor;" +
@@ -575,16 +751,21 @@ public class Service {
                 "\n\t5. View the grade of a work;" +
                 "\n\t6. View all the works turned in;" +
                 "\n\t0. EXIT.");
-        int choice = scan.nextInt();
-        scan.nextLine();
-
+        int choice = -1;
+        try {
+            choice = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
         switch (choice){
             case 1: {
                 editStudentData(id);
                 break;
             }
             case 2: {
-                viewSchedule();
+                viewSchedule(id);
                 break;
             }
             case 3: {
@@ -604,7 +785,7 @@ public class Service {
                 break;
             }
             case 0: {
-                break;
+                return;
             }
             default:{
                 System.out.println("That number doesn't exist. Please try again!");
@@ -615,43 +796,47 @@ public class Service {
         studentMenu(id);
     }
 
-    private void studentLogin(int attempts) throws ParseException, InterruptedException { //ok - tested
+    private void studentLogin(int attempts) throws ParseException, InterruptedException, IllegalAccessException {
         cls();
-
         System.out.println("\n\tSTUDENT LOGIN");
         System.out.println("\nID:");
         int id = scan.nextInt();
         scan.nextLine();
         System.out.println("\nPASSWORD:");
         String password = scan.nextLine();
-
-        if (studentMap.get(id) != null && studentMap.get(id).getPassword().equals(password)){
-            System.out.println("Login successful!");
-            studentMenu(id);
-        }
-        else if(attempts < 3){
-            System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
-            studentLogin(++attempts);
-        }
-        else {
-            System.out.println("Too many wrong attempts. Returning to main menu.");
-            mainMenu();
+        try {
+            if (studentMap.get(id) != null && studentMap.get(id).getPassword().equals(password)) {
+                System.out.println("Login successful!");
+                studentMenu(id);
+            } else if (attempts < 3) {
+                System.out.printf(studentMap.get(id).getPassword());
+                System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+                studentLogin(++attempts);
+            } else {
+                System.out.println("Too many wrong attempts. Returning to main menu.");
+                mainMenu();
+            }
+        }catch(NullPointerException exception){
+        System.out.println("Wrong ID or password. Attempts left:" + (3 - attempts));
+        studentLogin(++attempts);
         }
     }
 
-    private void mainMenu() throws ParseException, InterruptedException { //ok - tested
-        cls();
-
+    private void mainMenu() throws ParseException, InterruptedException, IllegalAccessException {
         System.out.println("\tHello!\n\nWelcome to the Student Info Portal. Please select the number of the operation you wish to perform:" +
                 "\n\t1. PROFESSOR LOGIN;" +
                 "\n\t2. STUDENT LOGIN;" +
                 "\n\t0. EXIT." +
                 "\n\nYour choice: ");
-
-        int choice = scan.nextInt();
-        scan.nextLine();
-
-        switch(choice){
+        int choice = -1;
+        try {
+            choice = scan.nextInt();
+            scan.nextLine();
+        } catch (InputMismatchException exception) {
+            System.out.println("Integers only, please.");
+            return;
+        }
+        switch (choice) {
             case 1: {
                 professorLogin(0);
                 break;
@@ -660,10 +845,10 @@ public class Service {
                 studentLogin(0);
                 break;
             }
-            case 0:{
+            case 0: {
                 break;
             }
-            default:{
+            default: {
                 System.out.println("Wrong number. Try again.");
                 break;
             }
@@ -671,150 +856,64 @@ public class Service {
 
     }
 
-    public void init() throws ParseException, InterruptedException { //NOT DONE
+    public void init() throws ParseException, InterruptedException, IllegalAccessException {
 
-        Professor p = new Professor();
+        as = AuditService.createInstance();
 
-        Student s1= new Student("Dumitru","Cristea", 23, "dumitru.cristea@myxmail.com", "ITNCDH", new SimpleDateFormat("dd-MM-yyyy").parse("27-1-1999"),1);
-        Student s2= new Student("Dante","Voinea", 21, "dante.voinea@myxmail.com", "EKYFGW", new SimpleDateFormat("dd-MM-yyyy").parse("15-7-2001"),1);
-        Student s3= new Student("Stela","Barbu", 21, "stela.barbu@myxmail.com", "OZQKWO", new SimpleDateFormat("dd-MM-yyyy").parse("12-12-2001"),1);
-        Student s4= new Student("Cosmina","Munteanu", 20, "cosmina.munteanu@myxmail.com", "OJJSPN", new SimpleDateFormat("dd-MM-yyyy").parse("1-9-2002"),1);
-        Student s5= new Student("Anghel","Dima", 20, "anghel.dima@myxmail.com", "ZIUOCA", new SimpleDateFormat("dd-MM-yyyy").parse("18-11-2002"),1);
-        Student s6= new Student("Gloria","Albu", 19, "gloria.albu@myxmail.com", "DKYGWQ", new SimpleDateFormat("dd-MM-yyyy").parse("13-9-2003"),1);
-        Student s7= new Student("Serban","Iancu", 23, "serban.iancu@myxmail.com", "RGRULV", new SimpleDateFormat("dd-MM-yyyy").parse("7-10-1999"),1);
-        Student s8= new Student("Stefan","Nistor", 22, "stefan.nistor@myxmail.com", "DTQVBI", new SimpleDateFormat("dd-MM-yyyy").parse("24-4-2000"),1);
-        Student s9= new Student("Lavinia","Călinescu", 19, "lavinia.călinescu@myxmail.com", "YQRDXC", new SimpleDateFormat("dd-MM-yyyy").parse("17-9-2003"),1);
-        Student s10= new Student("Aurel","Sava", 24, "aurel.sava@myxmail.com", "MDBBAR", new SimpleDateFormat("dd-MM-yyyy").parse("19-4-1998"),1);
-        Student s11= new Student("Rodica","Rusu", 20, "rodica.rusu@myxmail.com", "CCMGFU", new SimpleDateFormat("dd-MM-yyyy").parse("16-8-2002"),2);
-        Student s12= new Student("Angelica","Sava", 21, "angelica.sava@myxmail.com", "AYJRGG", new SimpleDateFormat("dd-MM-yyyy").parse("19-7-2001"),2);
-        Student s13= new Student("Monica","Cristea", 23, "monica.cristea@myxmail.com", "FVOERO", new SimpleDateFormat("dd-MM-yyyy").parse("22-11-1999"),2);
-        Student s14= new Student("Codruț","Georgescu", 24, "codruț.georgescu@myxmail.com", "MUCUWR", new SimpleDateFormat("dd-MM-yyyy").parse("7-12-1998"),2);
-        Student s15= new Student("Horia","Moisescu", 20, "horeahoria.moisescu@myxmail.com", "FTRGME", new SimpleDateFormat("dd-MM-yyyy").parse("13-11-2002"),2);
-        Student s16= new Student("Sofia","Frățilă", 21, "sofia.frățilă@myxmail.com", "TJXAZJ", new SimpleDateFormat("dd-MM-yyyy").parse("26-3-2001"),2);
-        Student s17= new Student("Cristian","Mihăilescu", 24, "cristian.mihăilescu@myxmail.com", "KVNDLS", new SimpleDateFormat("dd-MM-yyyy").parse("3-8-1998"),2);
-        Student s18= new Student("Gelu","Ursu", 22, "gelu.ursu@myxmail.com", "ROAWIG", new SimpleDateFormat("dd-MM-yyyy").parse("23-6-2000"),2);
-        Student s19= new Student("Zoe","Barbu", 24, "zoe.barbu@myxmail.com", "NEFTYV", new SimpleDateFormat("dd-MM-yyyy").parse("19-5-1998"),2);
-        Student s20= new Student("Panait","Sava", 23, "panait.sava@myxmail.com", "HCEHFY", new SimpleDateFormat("dd-MM-yyyy").parse("11-7-1999"),2);
+        List<Student> SL = ReadService.readCSV("src\\com\\company\\data\\Students.csv", Student.class);
 
-        studentMap.put(1,s1);
-        studentMap.put(2,s2);
-        studentMap.put(3,s3);
-        studentMap.put(4,s4);
-        studentMap.put(5,s5);
-        studentMap.put(6,s6);
-        studentMap.put(7,s7);
-        studentMap.put(8,s8);
-        studentMap.put(9,s9);
-        studentMap.put(10,s10);
-        studentMap.put(11,s11);
-        studentMap.put(12,s12);
-        studentMap.put(13,s13);
-        studentMap.put(14,s14);
-        studentMap.put(15,s15);
-        studentMap.put(16,s16);
-        studentMap.put(17,s17);
-        studentMap.put(18,s18);
-        studentMap.put(19,s19);
-        studentMap.put(20,s20);
-
-        ArrayList<Integer> sIdList1 = new ArrayList<>();
-        ArrayList<Integer> cIdList1 = new ArrayList<>();
-        ArrayList<Integer> sIdList2 = new ArrayList<>();
-        ArrayList<Integer> cIdList2 = new ArrayList<>();
-
-        for (int i = 1; i <= 20; i++){
-            if(i<=10) sIdList1.add(i);
-            else sIdList2.add(i);
+        if (SL != null){
+            for (int i = 1; i <= SL.size(); i ++){
+                studentMap.put(i, SL.get(i-1));
+            }
         }
 
-        Class c1 = new Class("A",10,5, sIdList1, cIdList1);
-        Class c2 = new Class("B",10,15, sIdList2, cIdList2);
-
-        classMap.put(c1.getId(),c1);
-        classMap.put(c2.getId(),c2);
-
-        Professor p1= new Professor("Paula","Diaconu", 64, "paula.diaconu@myxmail.com", "ZBXEPU", new SimpleDateFormat("dd-MM-yyyy").parse("7-2-1958"));
-        Professor p2= new Professor("Barbu","Nițu", 48, "barbu.nițu@myxmail.com", "SUZVRG", new SimpleDateFormat("dd-MM-yyyy").parse("21-8-1974"));
-        Professor p3= new Professor("Andrei","Dima", 49, "andrei.dima@myxmail.com", "KQLLZC", new SimpleDateFormat("dd-MM-yyyy").parse("28-7-1973"));
-        Professor p4= new Professor("Sandu","Pușcașu", 54, "sandu.pușcașu@myxmail.com", "WLYYAL", new SimpleDateFormat("dd-MM-yyyy").parse("13-3-1968"));
-        Professor p5= new Professor("Eugen","Stan", 65, "eugen.stan@myxmail.com", "FGNJAG", new SimpleDateFormat("dd-MM-yyyy").parse("26-11-1957"));
-        Professor p6= new Professor("Cosma","Tudor", 51, "cosma.tudor@myxmail.com", "BUYFKE", new SimpleDateFormat("dd-MM-yyyy").parse("21-11-1971"));
-        Professor p7= new Professor("Ruxandra","Tabacu", 42, "ruxandra.tabacu@myxmail.com", "CPWYWP", new SimpleDateFormat("dd-MM-yyyy").parse("14-8-1980"));
-        Professor p8= new Professor("Victor","Ursu", 46, "victor.ursu@myxmail.com", "KBDJNB", new SimpleDateFormat("dd-MM-yyyy").parse("9-2-1976"));
-        Professor p9= new Professor("Basarab","Ifrim", 55, "basarab.ifrim@myxmail.com", "MLAVLW", new SimpleDateFormat("dd-MM-yyyy").parse("6-5-1967"));
-        Professor p10= new Professor("Melania", "Dabija", 64, "melania.dabija@myxmail.com", "DDSYOT", new SimpleDateFormat("dd-MM-yyyy").parse("7-7-1958"));
-
-        professorMap.put(1,p1);
-        professorMap.put(2,p2);
-        professorMap.put(3,p3);
-        professorMap.put(4,p4);
-        professorMap.put(5,p5);
-        professorMap.put(6,p6);
-        professorMap.put(7,p7);
-        professorMap.put(8,p8);
-        professorMap.put(9,p9);
-        professorMap.put(10,p10);
-
-        Subject sub1 = new Subject("Geometry 1"); //1
-        Subject sub2 = new Subject("Geometry 2"); //2
-        Subject sub3 = new Subject("Algebra"); //3
-        Subject sub4 = new Subject("Calculus 1");//4
-        Subject sub5 = new Subject("Calculus 2");//5
-
-        subjectMap.put(1,sub1);
-        subjectMap.put(2,sub2);
-        subjectMap.put(3,sub3);
-        subjectMap.put(4,sub4);
-        subjectMap.put(5,sub5);
-
-
-        Course cou1 = new Course(1,1,3,"10:00","Lab 3");
-        Course cou2 = new Course(3,10,1,"10:00","Lab 1");
-        Course cou3 = new Course(2,2,2,"10:00","Classroom 2-A");
-        Course cou4 = new Course(3,3,1,"12:00","Main Amphitheatre");
-        Course cou5 = new Course(3,4,3,"16:00","Lab 1-A");
-        Course cou6 = new Course(2,5,4,"08:00","Classroom 23");
-        Course cou7 = new Course(1,5,7,"14:00","Main Amphitheatre");
-        Course cou8 = new Course(2,1,5,"18:00","Classroom 35");
-        Course cou9 = new Course(2,2,6,"16:00","Lab 4");
-        Course cou10 = new Course(1,6,6,"12:00","Classroom 1-B");
-        Course cou11 = new Course(5,7,7,"14:00","Amphitheatre 2");
-        Course cou12 = new Course(4,8,4,"12:00","Lab 1");
-        Course cou13 = new Course(1,9,5,"08:00","Classroom 24");
-        Course cou14 = new Course(4,9,4,"10:00","Classroom 15");
-        Course cou15 = new Course(5,5,4,"12:00","Lab 2");
-
-        courseMap.put(1,cou1);
-        courseMap.put(2,cou2);
-        courseMap.put(3,cou3);
-        courseMap.put(4,cou4);
-        courseMap.put(5,cou5);
-        courseMap.put(6,cou6);
-        courseMap.put(7,cou7);
-        courseMap.put(8,cou8);
-        courseMap.put(9,cou9);
-        courseMap.put(10,cou10);
-        courseMap.put(11,cou11);
-        courseMap.put(12,cou12);
-        courseMap.put(13,cou13);
-        courseMap.put(14,cou14);
-        courseMap.put(15,cou15);
-
-        for(int i=1;i<=15;i++){
-            if(i <= 8) classMap.get(1).getCourseIdList().add(i);
-            else classMap.get(2).getCourseIdList().add(i);
+        List<Professor> PL = ReadService.readCSV("src\\com\\company\\data\\Professors.csv", Professor.class);
+        if (PL != null){
+            for (int i = 1; i <= PL.size(); i ++){
+                professorMap.put(i, PL.get(i-1));
+//                System.out.println(i + " " + PL.get(i-1).getCourses());
+            }
         }
 
-        Assignment a = new Assignment(1,0.5,new SimpleDateFormat("dd-MM-yyyy").parse("2-4-2022"),
-                "Finish exercises left in workbook");
+        List<Class> ClL = ReadService.readCSV("src\\com\\company\\data\\Classes.csv", Class.class);
+        if (PL != null){
+            for (int i = 1; i <= ClL.size(); i ++){
+                classMap.put(i, ClL.get(i-1));
+            }
+        }
 
-        cou1.getAssignmentList().add(1);
+        List<Subject> SuL = ReadService.readCSV("src\\com\\company\\data\\Subjects.csv", Subject.class);
+        if (SuL != null){
+            for (int i = 1; i <= SuL.size(); i ++){
+                subjectMap.put(i, SuL.get(i-1));
+            }
+        }
 
-        Work w = new Work(1,1,new SimpleDateFormat("dd-MM-yyyy").parse("28-03-2022"),false);
+        List<Course> CoL = ReadService.readCSV("src\\com\\company\\data\\Courses.csv", Course.class);
+        if (CoL != null){
+            for (int i = 1; i <= CoL.size(); i ++){
+                courseMap.put(i, CoL.get(i-1));
+            }
+        }
 
-        s1.getWorks().add(w);
-
-        assignmentMap.put(1,a);
+//
+//        Professor p1= new Professor("Paula","Diaconu", 64, "paula.diaconu@myxmail.com", "ZBXEPU", new SimpleDateFormat("dd-MM-yyyy").parse("7-2-1958"));
+//
+//        WriteService WS;
+//
+//        WriteService.write("src\\com\\company\\data\\Professors.csv", p1, Professor.class);
+//
+//        Assignment a = new Assignment(1,0.5,new SimpleDateFormat("dd-MM-yyyy").parse("2-4-2022"),
+//                "Finish exercises left in workbook");
+//
+//        cou1.getAssignmentList().add(1);
+//
+//        Work w = new Work(1,1,new SimpleDateFormat("dd-MM-yyyy").parse("28-03-2022"),false);
+//
+//        s1.getWorks().add(w);
+//
+//        assignmentMap.put(1,a);
 
         mainMenu();
     }

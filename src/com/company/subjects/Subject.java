@@ -1,9 +1,14 @@
-package com.company.subjects;
+package src.com.company.subjects;
 
 public class Subject {
     private static int idCounter = 0;
     private final int id;
     private String name;
+
+    public Subject() {
+        idCounter++;
+        this.id = idCounter;
+    }
 
     public Subject(String name) {
         idCounter++;
