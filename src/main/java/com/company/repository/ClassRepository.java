@@ -45,7 +45,7 @@ public class ClassRepository {
 
     public void insertClass(Class c) {
         String insertPersonSql = "INSERT INTO class(name, student_number, representative_id)" +
-                " VALUES(?, ?, ?, ?, ?)";
+                " VALUES(?, ?, ?)";
 
         Connection connection = DBConfig.getDatabaseConnection();
 

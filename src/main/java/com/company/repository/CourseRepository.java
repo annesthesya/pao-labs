@@ -46,7 +46,7 @@ public class CourseRepository {
 
     public void insertCourse(Course c) {
         String insertPersonSql = "INSERT INTO course(subject_id, professor_id, week_day, hour, location)" +
-                " VALUES(?, ?, ?, ?, ?, ?)";
+                " VALUES(?, ?, ?, ?, ?)";
 
         Connection connection = DBConfig.getDatabaseConnection();
 
@@ -55,7 +55,7 @@ public class CourseRepository {
             preparedStatement.setInt(2, c.getProfessorId());
             preparedStatement.setInt(3, c.getWeekDay());
             preparedStatement.setString(4, c.getHour());
-            preparedStatement.setString(4, c.getLocation());
+            preparedStatement.setString(5, c.getLocation());
             preparedStatement.executeUpdate();
             closeDatabaseConnection();
         } catch (SQLException e) {

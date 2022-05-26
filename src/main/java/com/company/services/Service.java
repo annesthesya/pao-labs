@@ -1,17 +1,20 @@
 package com.company.services;
 
 import com.company.assignments.*;
+import com.company.repository.ClassRepository;
+import com.company.repository.CourseRepository;
 import com.company.repository.ProfessorRepository;
+import com.company.repository.StudentRepository;
 import com.company.subjects.Class;
 import com.company.subjects.Course;
 import com.company.subjects.Subject;
 import com.company.users.Professor;
 import com.company.users.Student;
-import com.company.repository.StudentRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class Service {
@@ -344,9 +347,9 @@ public class Service {
             return;
         }
         Student newStudent = new Student(name, surname,2022 - Integer.parseInt(birthday.substring(birthday.length() - 4)),
-                email, password, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy").parse(birthday), classId);
+                email, password, new SimpleDateFormat("dd-MM-yyyy").parse(birthday), classId);
         studentMap.put(newStudent.getId(),newStudent);
-        WriteService.write("src/com/company/data/Students.csv", newStudent, Student.class);
+        WriteService.write("src/main/java/com/company/users/Student.java", newStudent, Student.class);
         System.out.println("SUMMARY:" + studentMap.get(newStudent.getId()).toString());
     }
 
@@ -886,10 +889,14 @@ public class Service {
             }
         }
 
+        ClassRepository clr = ClassRepository.createClassRepository();
+        clr.createClassTable();
+
         List<Class> ClL = ReadService.readCSV("src/main/java/com/company/data/Classes.csv", Class.class);
         if (PL != null){
             for (int i = 1; i <= ClL.size(); i ++){
                 classMap.put(i, ClL.get(i-1));
+                clr.insertClass(ClL.get(i-1));
             }
         }
 
@@ -900,10 +907,14 @@ public class Service {
             }
         }
 
+        CourseRepository cr = CourseRepository.createCourseRepository();
+        cr.createCourseTable();
+
         List<Course> CoL = ReadService.readCSV("src/main/java/com/company/data/Courses.csv", Course.class);
         if (CoL != null){
             for (int i = 1; i <= CoL.size(); i ++){
                 courseMap.put(i, CoL.get(i-1));
+                cr.insertCourse(CoL.get(i-1));
             }
         }
 
