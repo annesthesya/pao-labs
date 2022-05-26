@@ -1,6 +1,7 @@
-package src.com.company.subjects;
+package com.company.subjects;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Course {
     private static int idCounter;
@@ -70,7 +71,7 @@ public class Course {
         this.hour = hour;
     }
 
-    public ArrayList<Integer> getAssignmentList() {
+    public List<Integer> getAssignmentList() {
         return assignmentList;
     }
     public void setAssignmentList(ArrayList<Integer> assignmentList) {

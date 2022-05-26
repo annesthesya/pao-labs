@@ -1,5 +1,7 @@
 package com.company;
-import com.company.services.Service;
+
+import src.com.company.services.Service;
+
 import java.text.ParseException;
 
 public class Main {
