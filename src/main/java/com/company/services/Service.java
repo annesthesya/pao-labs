@@ -1,11 +1,13 @@
 package com.company.services;
 
 import com.company.assignments.*;
+import com.company.repository.ProfessorRepository;
 import com.company.subjects.Class;
 import com.company.subjects.Course;
 import com.company.subjects.Subject;
 import com.company.users.Professor;
 import com.company.users.Student;
+import com.company.repository.StudentRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -342,7 +344,7 @@ public class Service {
             return;
         }
         Student newStudent = new Student(name, surname,2022 - Integer.parseInt(birthday.substring(birthday.length() - 4)),
-                email, password, new SimpleDateFormat("dd-MM-yyyy").parse(birthday), classId);
+                email, password, (java.sql.Date) new SimpleDateFormat("dd-MM-yyyy").parse(birthday), classId);
         studentMap.put(newStudent.getId(),newStudent);
         WriteService.write("src/com/company/data/Students.csv", newStudent, Student.class);
         System.out.println("SUMMARY:" + studentMap.get(newStudent.getId()).toString());
@@ -859,19 +861,28 @@ public class Service {
 
         as = AuditService.createInstance();
 
+        StudentRepository sr = StudentRepository.createStudentRepository();
+
+        sr.createStudentTable();
+
         List<Student> SL = ReadService.readCSV("src/main/java/com/company/data/Students.csv", Student.class);
 
         if (SL != null){
             for (int i = 1; i <= SL.size(); i ++){
                 studentMap.put(i, SL.get(i-1));
+                sr.insertStudent(SL.get(i-1));
             }
         }
+
+        ProfessorRepository pr = ProfessorRepository.createProfessorRepository();
+
+        pr.createProfessorTable();
 
         List<Professor> PL = ReadService.readCSV("src/main/java/com/company/data/Professors.csv", Professor.class);
         if (PL != null){
             for (int i = 1; i <= PL.size(); i ++){
                 professorMap.put(i, PL.get(i-1));
-//                System.out.println(i + " " + PL.get(i-1).getCourses());
+                pr.insertProfessor(PL.get(i-1));
             }
         }
 

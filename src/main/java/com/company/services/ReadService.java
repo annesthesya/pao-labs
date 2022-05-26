@@ -51,19 +51,14 @@ public class ReadService<T>{
                     field.setAccessible(true);
                     var value = values[i];
                     if (value.startsWith("i-")){
-//                        System.out.println("ok1");
                         field.set(object, Integer.parseInt(value.substring(2)));
                     } else if (value.startsWith("d-")){
-//                        System.out.println("ok2");
                         field.set(object, Double.parseDouble(value.substring(2)));
                     } else if (value.startsWith("b-")){
-//                        System.out.println("ok3");
                         field.set(object, Boolean.parseBoolean(value.substring(2)));
                     } else if (value.startsWith("da-")) {
-//                        System.out.println("ok4");
                         field.set(object, format.parse(value.substring(3)));
                     }else if(value.startsWith("li-")){
-//                        System.out.println("ok5");
                         List<Integer> listValues = new ArrayList<>();
                         String[] arrayValues = value.substring(3).split("\\|");
                         for (var av : arrayValues){
